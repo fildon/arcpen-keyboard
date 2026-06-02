@@ -50,7 +50,7 @@ object CharacterLayout {
         GestureKey(3, true,  1) to 'h',
         GestureKey(3, true,  2) to 'w',
         GestureKey(3, true,  3) to 'x',
-        GestureKey(3, true,  4) to '/',
+        GestureKey(3, true,  4) to '\'',
     )
 
     fun getCharacter(sector: Int, clockwise: Boolean, depth: Int): Char? =
