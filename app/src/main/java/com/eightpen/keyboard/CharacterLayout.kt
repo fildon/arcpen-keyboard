@@ -7,8 +7,19 @@ package com.eightpen.keyboard
  * Direction: true=clockwise, false=counterclockwise.
  * Depth 1–4: how many quadrants the gesture passes through before returning to centre.
  *
- * Character placement is frequency-ordered so common letters require shallower arcs.
- * Depth-1 characters (e, t, a, o, i, n, s, h) cover the eight most-common English letters.
+ * Placement is frequency-ordered across letters AND punctuation so the most
+ * common characters always require the shallowest arc.
+ *
+ * Approximate frequencies used (letters: standard corpus; punctuation: per-1000-word
+ * counts converted to character-level % by dividing by ~5000):
+ *
+ *   Depth 1 – e(13%) t(9%) a(8%) o(7.5%) i(7%) n(6.7%) s(6.3%) h(6.1%)
+ *   Depth 2 – r(6%) d(4.3%) l(4%) c(2.8%) u(2.8%) m(2.4%) w(2.4%) f(2.2%)
+ *   Depth 3 – y(2%) g(2%) p(1.9%) b(1.5%) .(1.3%) ,(1.2%) v(0.98%) k(0.77%)
+ *   Depth 4 – '(0.49%) -(0.31%) j(0.15%) x(0.15%) ?(0.11%) q(0.10%) !(0.07%) z(0.07%)
+ *
+ * The West sector doubles as the punctuation sector at depths 3–4:
+ *   West depth 3: , .   West depth 4: - '
  */
 object CharacterLayout {
 
@@ -28,11 +39,11 @@ object CharacterLayout {
         GestureKey(1, false, 1) to 'a',
         GestureKey(1, false, 2) to 'l',
         GestureKey(1, false, 3) to 'p',
-        GestureKey(1, false, 4) to ',',
+        GestureKey(1, false, 4) to 'j',    // was ','  (j 0.15% < ', ' 1.2%)
         GestureKey(1, true,  1) to 'o',
         GestureKey(1, true,  2) to 'c',
         GestureKey(1, true,  3) to 'b',
-        GestureKey(1, true,  4) to '.',
+        GestureKey(1, true,  4) to 'x',    // was '.'  (x 0.15% < '.' 1.3%)
         // ── South sector ──────────────────────────────────────
         GestureKey(2, false, 1) to 'i',
         GestureKey(2, false, 2) to 'u',
@@ -42,14 +53,14 @@ object CharacterLayout {
         GestureKey(2, true,  2) to 'm',
         GestureKey(2, true,  3) to 'k',
         GestureKey(2, true,  4) to '?',
-        // ── West sector ───────────────────────────────────────
+        // ── West sector (punctuation sector at depths 3–4) ────
         GestureKey(3, false, 1) to 's',
         GestureKey(3, false, 2) to 'f',
-        GestureKey(3, false, 3) to 'j',
+        GestureKey(3, false, 3) to ',',    // was 'j'  (',' 1.2% > j 0.15%)
         GestureKey(3, false, 4) to '-',
         GestureKey(3, true,  1) to 'h',
         GestureKey(3, true,  2) to 'w',
-        GestureKey(3, true,  3) to 'x',
+        GestureKey(3, true,  3) to '.',    // was 'x'  ('.' 1.3% > x 0.15%)
         GestureKey(3, true,  4) to '\'',
     )
 
