@@ -1,0 +1,10 @@
+<resources>
+    <color name="bg_dark">#1A1A2E</color>
+    <color name="circle_bg">#16213E</color>
+    <color name="accent">#E94560</color>
+    <color name="accent_light">#FF6B8A</color>
+    <color name="sector_line">#0F3460</color>
+    <color name="char_normal">#DDDDDD</color>
+    <color name="char_dim">#888888</color>
+    <color name="strip_bg">#0D0D1F</color>
+</resources>
