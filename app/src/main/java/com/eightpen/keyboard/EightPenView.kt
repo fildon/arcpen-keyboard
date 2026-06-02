@@ -10,25 +10,28 @@ import android.view.View
 import kotlin.math.*
 
 enum class ShiftState { OFF, ONCE, LOCKED }
+enum class KeyboardMode { ALPHA, NUMERIC }
 
 /**
  * The 8pen keyboard surface.
  *
- * The circle fills the whole view. The four utility actions live in the corners
- * of the bounding rectangle, in the space outside the circle:
+ * ALPHA mode: circular gesture area fills the view. Corner buttons live in the
+ * four dead-zones outside the circle.
  *
- *   ⇧ ───────────────────── ⌫
- *   │                         │
- *   │      circular area      │
- *   │                         │
- *   sp ──────────────────── ↵
+ *   ⇧ ─────────────────────── ⌫
+ *   │                           │
+ *   │       circular area       │
+ *   │                           │
+ *   123 ─────────────────────  ↵
  *
- * Gesture rules:
- *   • Touch-down in the centre disc → starts gesture
- *   • Sweep into a quadrant, arc through more quadrants, return to centre → commit
- *   • Tap centre (no arc) → space
- *   • Long-press centre → backspace
- *   • Tap any corner → corner action (⇧ cycles shift, ⌫ backspace, space, ↵ enter)
+ * NUMERIC mode: a standard dial-pad replaces the circle. Corner buttons remain.
+ *
+ *   ⇧ (inactive)  ─────────── ⌫
+ *   │  [ 1 ][ 2 ][ 3 ]         │
+ *   │  [ 4 ][ 5 ][ 6 ]         │
+ *   │  [ 7 ][ 8 ][ 9 ]         │
+ *   │     [ . ][ 0 ]            │
+ *   abc ─────────────────────  ↵
  */
 class EightPenView @JvmOverloads constructor(
     context: Context,
@@ -45,6 +48,8 @@ class EightPenView @JvmOverloads constructor(
 
     var keyListener: KeyListener? = null
     var shiftState = ShiftState.OFF
+    var mode = KeyboardMode.ALPHA
+        private set
 
     // ── Geometry ──────────────────────────────────────────────────────────────
     private var cx = 0f
@@ -53,6 +58,11 @@ class EightPenView @JvmOverloads constructor(
     private var centerR = 0f
     private var cornerW = 0f
     private var cornerH = 0f
+
+    // Dial-pad button layout (computed in onSizeChanged)
+    private val dialRects  = mutableListOf<RectF>()
+    private val dialChars  = charArrayOf('1','2','3','4','5','6','7','8','9','.','0')
+    private var pressedDial = -1   // index into dialChars, or -1
 
     // ── Gesture state ─────────────────────────────────────────────────────────
     private val tracker = GestureTracker()
@@ -68,86 +78,74 @@ class EightPenView @JvmOverloads constructor(
     private companion object {
         const val CORNER_TL = 0  // ⇧  shift
         const val CORNER_TR = 1  // ⌫  backspace
-        const val CORNER_BL = 2  // space
+        const val CORNER_BL = 2  // 123 / abc toggle
         const val CORNER_BR = 3  // ↵  enter
     }
 
     // ── Paints ────────────────────────────────────────────────────────────────
     private val paintBg = Paint().apply {
-        color = Color.parseColor("#1A1A2E")
-        style = Paint.Style.FILL
+        color = Color.parseColor("#1A1A2E"); style = Paint.Style.FILL
     }
     private val paintCircle = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#16213E")
-        style = Paint.Style.FILL
+        color = Color.parseColor("#16213E"); style = Paint.Style.FILL
     }
     private val paintSectorLine = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#0F3460")
-        style = Paint.Style.STROKE
-        strokeWidth = 2f
+        color = Color.parseColor("#0F3460"); style = Paint.Style.STROKE; strokeWidth = 2f
     }
     private val paintSectorHighlight = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#1C1C44")
-        style = Paint.Style.FILL
+        color = Color.parseColor("#1C1C44"); style = Paint.Style.FILL
     }
     private val paintCenter = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#E94560")
-        style = Paint.Style.FILL
+        color = Color.parseColor("#E94560"); style = Paint.Style.FILL
     }
     private val paintCenterActive = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#FF6B8A")
-        style = Paint.Style.FILL
+        color = Color.parseColor("#FF6B8A"); style = Paint.Style.FILL
     }
     private val paintCenterRing = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#E94560")
-        style = Paint.Style.STROKE
-        strokeWidth = 2f
+        color = Color.parseColor("#E94560"); style = Paint.Style.STROKE; strokeWidth = 2f
     }
     private val paintCharNormal = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#CCCCCC")
-        style = Paint.Style.FILL
+        color = Color.parseColor("#CCCCCC"); style = Paint.Style.FILL
         textAlign = Paint.Align.CENTER
     }
     private val paintCharTarget = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#E94560")
-        style = Paint.Style.FILL
+        color = Color.parseColor("#E94560"); style = Paint.Style.FILL
         textAlign = Paint.Align.CENTER
     }
     private val paintTrail = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#E94560")
-        style = Paint.Style.STROKE
-        strokeWidth = 5f
-        strokeCap = Paint.Cap.ROUND
-        strokeJoin = Paint.Join.ROUND
-        alpha = 180
+        color = Color.parseColor("#E94560"); style = Paint.Style.STROKE
+        strokeWidth = 5f; strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND; alpha = 180
     }
     private val paintPreview = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#E94560")
-        style = Paint.Style.FILL
-        textAlign = Paint.Align.CENTER
-        isFakeBoldText = true
+        color = Color.parseColor("#E94560"); style = Paint.Style.FILL
+        textAlign = Paint.Align.CENTER; isFakeBoldText = true
     }
-    // Corner label paints — LEFT and RIGHT aligned versions
+    // Corner labels
     private val paintCornerL = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#888888")
-        style = Paint.Style.FILL
-        textAlign = Paint.Align.LEFT
+        color = Color.parseColor("#888888"); style = Paint.Style.FILL; textAlign = Paint.Align.LEFT
     }
     private val paintCornerR = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#888888")
-        style = Paint.Style.FILL
-        textAlign = Paint.Align.RIGHT
+        color = Color.parseColor("#888888"); style = Paint.Style.FILL; textAlign = Paint.Align.RIGHT
     }
     private val paintShiftOnceL = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.WHITE
-        style = Paint.Style.FILL
-        textAlign = Paint.Align.LEFT
+        color = Color.WHITE; style = Paint.Style.FILL; textAlign = Paint.Align.LEFT
     }
     private val paintShiftLockedL = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#E94560")
-        style = Paint.Style.FILL
-        textAlign = Paint.Align.LEFT
-        isFakeBoldText = true
+        color = Color.parseColor("#E94560"); style = Paint.Style.FILL
+        textAlign = Paint.Align.LEFT; isFakeBoldText = true
+    }
+    // Dial-pad
+    private val paintDialBtn = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#16213E"); style = Paint.Style.FILL
+    }
+    private val paintDialBtnPressed = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#2A2A5E"); style = Paint.Style.FILL
+    }
+    private val paintDialBtnStroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#0F3460"); style = Paint.Style.STROKE; strokeWidth = 1.5f
+    }
+    private val paintDialDigit = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.WHITE; style = Paint.Style.FILL; textAlign = Paint.Align.CENTER
     }
 
     // ── Reusable draw objects ─────────────────────────────────────────────────
@@ -177,15 +175,15 @@ class EightPenView @JvmOverloads constructor(
         cx = w / 2f
         cy = h / 2f
         outerR = minOf(w.toFloat(), h.toFloat()) / 2f * 0.88f
-        centerR = outerR * 0.22f   // larger centre zone for easier targeting
+        centerR = outerR * 0.22f
 
         cornerW = w * 0.22f
         cornerH = h * 0.22f
 
         val cornerTextSize = minOf(cornerW, cornerH) * 0.38f
-        paintCornerL.textSize  = cornerTextSize
-        paintCornerR.textSize  = cornerTextSize
-        paintShiftOnceL.textSize   = cornerTextSize
+        paintCornerL.textSize     = cornerTextSize
+        paintCornerR.textSize     = cornerTextSize
+        paintShiftOnceL.textSize  = cornerTextSize
         paintShiftLockedL.textSize = cornerTextSize
 
         paintCharNormal.textSize = outerR * 0.11f
@@ -193,60 +191,91 @@ class EightPenView @JvmOverloads constructor(
         paintPreview.textSize    = outerR * 0.22f
 
         tracker.initialize(cx, cy, centerR)
+        computeDialPadLayout(w.toFloat(), h.toFloat())
     }
 
-    override fun onDraw(canvas: Canvas) {
-        // ── Background ────────────────────────────────────────────────────────
-        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paintBg)
+    private fun computeDialPadLayout(w: Float, h: Float) {
+        dialRects.clear()
+        val btnW   = outerR * 0.52f
+        val btnH   = btnW * 0.72f
+        val gap    = btnW * 0.16f
+        val gridW  = 3 * btnW + 2 * gap
+        val gridH  = 4 * btnH + 3 * gap
+        val left   = cx - gridW / 2f
+        val top    = cy - gridH / 2f
 
-        // ── Sector highlight ──────────────────────────────────────────────────
+        // Rows 1–3: three buttons each (digits 1–9)
+        for (row in 0..2) {
+            val y = top + row * (btnH + gap)
+            for (col in 0..2) {
+                val x = left + col * (btnW + gap)
+                dialRects.add(RectF(x, y, x + btnW, y + btnH))
+            }
+        }
+        // Row 4: two centred buttons (. and 0)
+        val y4 = top + 3 * (btnH + gap)
+        val x4Left  = cx - gap / 2f - btnW
+        val x4Right = cx + gap / 2f
+        dialRects.add(RectF(x4Left,  y4, x4Left  + btnW, y4 + btnH))  // '.'
+        dialRects.add(RectF(x4Right, y4, x4Right + btnW, y4 + btnH))  // '0'
+
+        paintDialDigit.textSize = btnH * 0.52f
+    }
+
+    // ── Draw ──────────────────────────────────────────────────────────────────
+
+    override fun onDraw(canvas: Canvas) {
+        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paintBg)
+        if (mode == KeyboardMode.ALPHA) drawAlphaMode(canvas) else drawNumericMode(canvas)
+        drawCornerButtons(canvas)
+    }
+
+    private fun drawAlphaMode(canvas: Canvas) {
         if (tracker.isActive && tracker.currentSector >= 0) {
             drawSectorHighlight(canvas, tracker.currentSector)
         }
-
-        // ── Outer circle ──────────────────────────────────────────────────────
         canvas.drawCircle(cx, cy, outerR, paintCircle)
-
-        // ── Sector dividers ───────────────────────────────────────────────────
         drawSectorLines(canvas)
 
-        // ── Depth rings (subtle) ──────────────────────────────────────────────
         for (fraction in floatArrayOf(0.40f, 0.56f, 0.71f, 0.85f)) {
             paintSectorLine.alpha = 60
             canvas.drawCircle(cx, cy, outerR * fraction, paintSectorLine)
         }
         paintSectorLine.alpha = 255
 
-        // ── Character labels ──────────────────────────────────────────────────
         drawCharacters(canvas)
-
-        // ── Gesture trail ─────────────────────────────────────────────────────
         drawTrail(canvas)
 
-        // ── Centre disc ───────────────────────────────────────────────────────
         val centPaint = if (tracker.isActive && tracker.inCenter) paintCenterActive else paintCenter
         canvas.drawCircle(cx, cy, centerR, centPaint)
         canvas.drawCircle(cx, cy, centerR, paintCenterRing)
 
-        // ── Preview character ─────────────────────────────────────────────────
         tracker.preview?.let { ch ->
             val display = if (shiftState != ShiftState.OFF) ch.uppercaseChar() else ch
             canvas.drawText(display.toString(), cx, cy + paintPreview.textSize * 0.35f, paintPreview)
         }
-
-        // ── Corner buttons ────────────────────────────────────────────────────
-        drawCornerButtons(canvas)
     }
 
-    // ── Drawing helpers ───────────────────────────────────────────────────────
+    private fun drawNumericMode(canvas: Canvas) {
+        val radius = minOf(cornerW, cornerH) * 0.22f
+        dialRects.forEachIndexed { i, rect ->
+            val fill = if (i == pressedDial) paintDialBtnPressed else paintDialBtn
+            canvas.drawRoundRect(rect, radius, radius, fill)
+            canvas.drawRoundRect(rect, radius, radius, paintDialBtnStroke)
+            val textY = rect.centerY() + paintDialDigit.textSize * 0.35f
+            canvas.drawText(dialChars[i].toString(), rect.centerX(), textY, paintDialDigit)
+        }
+    }
+
+    // ── Alpha drawing helpers ─────────────────────────────────────────────────
 
     private fun drawSectorLines(canvas: Canvas) {
-        val diagonals = floatArrayOf(45f, 135f, 225f, 315f)
-        for (angleDeg in diagonals) {
+        for (angleDeg in floatArrayOf(45f, 135f, 225f, 315f)) {
             val rad = Math.toRadians(angleDeg.toDouble())
-            val ex = cx + outerR * cos(rad).toFloat()
-            val ey = cy + outerR * sin(rad).toFloat()
-            canvas.drawLine(cx, cy, ex, ey, paintSectorLine)
+            canvas.drawLine(cx, cy,
+                cx + outerR * cos(rad).toFloat(),
+                cy + outerR * sin(rad).toFloat(),
+                paintSectorLine)
         }
     }
 
@@ -261,31 +290,29 @@ class EightPenView @JvmOverloads constructor(
     }
 
     private fun drawCharacters(canvas: Canvas) {
-        val depthRadii  = floatArrayOf(0.40f, 0.56f, 0.71f, 0.85f)
-        val offset      = 20.0
+        val depthRadii   = floatArrayOf(0.40f, 0.56f, 0.71f, 0.85f)
+        val offset       = 20.0
         val sectorAngles = doubleArrayOf(270.0, 0.0, 90.0, 180.0)
         val shifted = shiftState != ShiftState.OFF
 
         for (sector in 0..3) {
             val centreAngle = sectorAngles[sector]
             val pairs = CharacterLayout.sectorPairs(sector)
-
             for ((depthIdx, pair) in pairs.withIndex()) {
                 val (ccwChar, cwChar) = pair
                 val r = outerR * depthRadii[depthIdx]
                 val depth = depthIdx + 1
-
                 cwChar?.let {
-                    val angle = centreAngle + offset
+                    val a = centreAngle + offset
                     val p = charPaintFor(sector, true, depth)
-                    val label = if (shifted) it.uppercaseChar().toString() else it.toString()
-                    canvas.drawText(label, charX(angle, r), charY(angle, r, p), p)
+                    canvas.drawText(if (shifted) it.uppercaseChar().toString() else it.toString(),
+                        charX(a, r), charY(a, r, p), p)
                 }
                 ccwChar?.let {
-                    val angle = centreAngle - offset
+                    val a = centreAngle - offset
                     val p = charPaintFor(sector, false, depth)
-                    val label = if (shifted) it.uppercaseChar().toString() else it.toString()
-                    canvas.drawText(label, charX(angle, r), charY(angle, r, p), p)
+                    canvas.drawText(if (shifted) it.uppercaseChar().toString() else it.toString(),
+                        charX(a, r), charY(a, r, p), p)
                 }
             }
         }
@@ -319,11 +346,12 @@ class EightPenView @JvmOverloads constructor(
         val h   = height.toFloat()
         val w   = width.toFloat()
 
-        // Top-left: shift (colour reflects state)
-        val shiftPaint = when (shiftState) {
-            ShiftState.OFF    -> paintCornerL
-            ShiftState.ONCE   -> paintShiftOnceL
-            ShiftState.LOCKED -> paintShiftLockedL
+        // Top-left: shift (dimmed in numeric mode)
+        val shiftPaint = when {
+            mode == KeyboardMode.NUMERIC -> paintCornerL
+            shiftState == ShiftState.ONCE   -> paintShiftOnceL
+            shiftState == ShiftState.LOCKED -> paintShiftLockedL
+            else -> paintCornerL
         }
         val shiftIcon = if (shiftState == ShiftState.LOCKED) "⇪" else "⇧"
         canvas.drawText(shiftIcon, pad, pad + ts, shiftPaint)
@@ -331,8 +359,8 @@ class EightPenView @JvmOverloads constructor(
         // Top-right: backspace
         canvas.drawText("⌫", w - pad, pad + ts, paintCornerR)
 
-        // Bottom-left: space
-        canvas.drawText("spc", pad, h - pad, paintCornerL)
+        // Bottom-left: mode toggle
+        canvas.drawText(if (mode == KeyboardMode.ALPHA) "123" else "abc", pad, h - pad, paintCornerL)
 
         // Bottom-right: enter
         canvas.drawText("↵", w - pad, h - pad, paintCornerR)
@@ -344,11 +372,37 @@ class EightPenView @JvmOverloads constructor(
         val x = event.x
         val y = event.y
 
+        // Corners are always checked first, in both modes.
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 touchedCorner = cornerFor(x, y)
-                if (touchedCorner >= 0) return true  // corner press — wait for UP
+                if (touchedCorner >= 0) return true
+            }
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                if (touchedCorner >= 0) {
+                    if (event.actionMasked == MotionEvent.ACTION_UP && cornerFor(x, y) == touchedCorner) {
+                        performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                        handleCorner(touchedCorner)
+                    }
+                    touchedCorner = -1
+                    return true
+                }
+            }
+            MotionEvent.ACTION_MOVE -> {
+                if (touchedCorner >= 0) return true
+            }
+        }
 
+        return if (mode == KeyboardMode.NUMERIC) {
+            handleDialPadTouch(event, x, y)
+        } else {
+            handleAlphaTouch(event, x, y)
+        }
+    }
+
+    private fun handleAlphaTouch(event: MotionEvent, x: Float, y: Float): Boolean {
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
                 touchDownX = x
                 touchDownY = y
                 longPressFired = false
@@ -356,9 +410,7 @@ class EightPenView @JvmOverloads constructor(
                 if (tracker.isActive) postDelayed(longPressRunnable, LONG_PRESS_MS)
                 invalidate()
             }
-
             MotionEvent.ACTION_MOVE -> {
-                if (touchedCorner >= 0) return true  // ignore drag on corner press
                 if (!tracker.isActive) return true
                 val committed = tracker.onMove(x, y)
                 if (committed != null) {
@@ -368,24 +420,9 @@ class EightPenView @JvmOverloads constructor(
                 if (tracker.startSector != -1) removeCallbacks(longPressRunnable)
                 invalidate()
             }
-
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                // Corner tap
-                if (touchedCorner >= 0) {
-                    if (event.actionMasked == MotionEvent.ACTION_UP && cornerFor(x, y) == touchedCorner) {
-                        performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                        handleCorner(touchedCorner)
-                    }
-                    touchedCorner = -1
-                    return true
-                }
-
                 removeCallbacks(longPressRunnable)
-                if (longPressFired) {
-                    tracker.reset()
-                    invalidate()
-                    return true
-                }
+                if (longPressFired) { tracker.reset(); invalidate(); return true }
 
                 val dist = sqrt((x - touchDownX).pow(2) + (y - touchDownY).pow(2))
                 if (dist < TAP_MAX_DIST && tracker.startSector == -1) {
@@ -405,19 +442,53 @@ class EightPenView @JvmOverloads constructor(
         return true
     }
 
+    private fun handleDialPadTouch(event: MotionEvent, x: Float, y: Float): Boolean {
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                pressedDial = dialIndexAt(x, y)
+                invalidate()
+            }
+            MotionEvent.ACTION_MOVE -> {
+                val idx = dialIndexAt(x, y)
+                if (idx != pressedDial) { pressedDial = idx; invalidate() }
+            }
+            MotionEvent.ACTION_UP -> {
+                val idx = dialIndexAt(x, y)
+                if (idx >= 0 && idx == pressedDial) {
+                    performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                    keyListener?.onCharacter(dialChars[idx])
+                }
+                pressedDial = -1
+                invalidate()
+            }
+            MotionEvent.ACTION_CANCEL -> { pressedDial = -1; invalidate() }
+        }
+        return true
+    }
+
+    private fun dialIndexAt(x: Float, y: Float): Int =
+        dialRects.indexOfFirst { it.contains(x, y) }
+
+    // ── Corner / shift helpers ────────────────────────────────────────────────
+
     private fun cornerFor(x: Float, y: Float): Int = when {
-        x < cornerW && y < cornerH                         -> CORNER_TL
-        x > width - cornerW && y < cornerH                 -> CORNER_TR
-        x < cornerW && y > height - cornerH                -> CORNER_BL
-        x > width - cornerW && y > height - cornerH        -> CORNER_BR
-        else                                               -> -1
+        x < cornerW && y < cornerH                   -> CORNER_TL
+        x > width - cornerW && y < cornerH           -> CORNER_TR
+        x < cornerW && y > height - cornerH          -> CORNER_BL
+        x > width - cornerW && y > height - cornerH  -> CORNER_BR
+        else                                         -> -1
     }
 
     private fun handleCorner(corner: Int) {
         when (corner) {
-            CORNER_TL -> cycleShift()
+            CORNER_TL -> if (mode == KeyboardMode.ALPHA) cycleShift()
             CORNER_TR -> keyListener?.onBackspace()
-            CORNER_BL -> keyListener?.onSpace()
+            CORNER_BL -> {
+                mode = if (mode == KeyboardMode.ALPHA) KeyboardMode.NUMERIC else KeyboardMode.ALPHA
+                tracker.reset()
+                pressedDial = -1
+                invalidate()
+            }
             CORNER_BR -> keyListener?.onEnter()
         }
     }
