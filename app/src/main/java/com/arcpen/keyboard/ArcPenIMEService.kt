@@ -1,4 +1,4 @@
-package com.eightpen.keyboard
+package com.arcpen.keyboard
 
 import android.inputmethodservice.InputMethodService
 import android.os.SystemClock
@@ -6,16 +6,16 @@ import android.text.InputType
 import android.view.View
 import android.view.inputmethod.EditorInfo
 
-class EightPenIMEService : InputMethodService() {
+class ArcPenIMEService : InputMethodService() {
 
-    private var keyboardView: EightPenView? = null
+    private var keyboardView: ArcPenView? = null
     private var lastSpaceTime = 0L
     private val DOUBLE_TAP_MS = 300L
 
     override fun onCreateInputView(): View {
-        return EightPenView(this).also { view ->
+        return ArcPenView(this).also { view ->
             keyboardView = view
-            view.keyListener = object : EightPenView.KeyListener {
+            view.keyListener = object : ArcPenView.KeyListener {
                 override fun onCharacter(ch: Char) {
                     currentInputConnection?.commitText(ch.toString(), 1)
                 }

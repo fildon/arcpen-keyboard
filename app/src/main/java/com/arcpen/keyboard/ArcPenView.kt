@@ -1,4 +1,4 @@
-package com.eightpen.keyboard
+package com.arcpen.keyboard
 
 import android.content.Context
 import android.graphics.*
@@ -13,27 +13,27 @@ enum class ShiftState { OFF, ONCE, LOCKED }
 enum class KeyboardMode { ALPHA, NUMERIC }
 
 /**
- * The 8pen keyboard surface.
+ * The ArcPen keyboard surface.
  *
  * ALPHA mode: circular gesture area fills the view. Corner buttons live in the
  * four dead-zones outside the circle.
  *
- *   ⇧ ─────────────────────── ⌫
- *   │                           │
- *   │       circular area       │
- *   │                           │
- *   123 ─────────────────────  ↵
+ *   SHF ─────────────────────── DEL
+ *   │                             │
+ *   │        circular area        │
+ *   │                             │
+ *   123 ───────────────────────  ENT
  *
  * NUMERIC mode: a standard dial-pad replaces the circle. Corner buttons remain.
  *
- *   ⇧ (inactive)  ─────────── ⌫
- *   │  [ 1 ][ 2 ][ 3 ]         │
- *   │  [ 4 ][ 5 ][ 6 ]         │
- *   │  [ 7 ][ 8 ][ 9 ]         │
- *   │     [ . ][ 0 ]            │
- *   abc ─────────────────────  ↵
+ *   SHF (inactive) ──────────── DEL
+ *   │  [ 1 ][ 2 ][ 3 ]           │
+ *   │  [ 4 ][ 5 ][ 6 ]           │
+ *   │  [ 7 ][ 8 ][ 9 ]           │
+ *   │     [ . ][ 0 ]              │
+ *   ABC ───────────────────────  ENT
  */
-class EightPenView @JvmOverloads constructor(
+class ArcPenView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
 ) : View(context, attrs) {
@@ -76,10 +76,10 @@ class EightPenView @JvmOverloads constructor(
     private val LONG_PRESS_MS = 500L
 
     private companion object {
-        const val CORNER_TL = 0  // ⇧  shift
-        const val CORNER_TR = 1  // ⌫  backspace
-        const val CORNER_BL = 2  // 123 / abc toggle
-        const val CORNER_BR = 3  // ↵  enter
+        const val CORNER_TL = 0  // SHF  shift
+        const val CORNER_TR = 1  // DEL  backspace
+        const val CORNER_BL = 2  // 123 / ABC toggle
+        const val CORNER_BR = 3  // ENT  enter
     }
 
     // ── Paints ────────────────────────────────────────────────────────────────

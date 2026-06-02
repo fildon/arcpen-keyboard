@@ -1,8 +1,8 @@
 <resources>
-    <string name="app_name">8pen Keyboard</string>
-    <string name="ime_name">8pen</string>
-    <string name="enable_keyboard">Step 1: Enable 8pen</string>
-    <string name="select_keyboard">Step 2: Select 8pen</string>
+    <string name="app_name">ArcPen Keyboard</string>
+    <string name="ime_name">ArcPen</string>
+    <string name="enable_keyboard">Step 1: Enable ArcPen</string>
+    <string name="select_keyboard">Step 2: Select ArcPen</string>
     <string name="setup_title">Setup</string>
     <string name="how_to_use_title">How to type</string>
     <string name="how_to_use_body">Touch the centre dot, sweep into a quadrant, arc clockwise or counterclockwise through additional quadrants, then return to centre to commit the letter.\n\nTap centre → space\nLong-press centre → backspace</string>

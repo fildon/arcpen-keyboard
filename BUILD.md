@@ -1,4 +1,4 @@
-# Building 8pen
+# Building ArcPen
 
 ## Requirements
 - Android Studio Hedgehog (2023.1) or later
@@ -6,15 +6,15 @@
 
 ## Steps
 
-1. Open `C:\work\8pen-keyboard` in Android Studio.
+1. Open `C:\work\arcpen-keyboard` in Android Studio.
    Android Studio will download Gradle and sync automatically.
 
 2. Build → Generate Signed APK (or just run to a connected device / emulator).
 
 3. Install the APK on your phone, then:
-   - Open the **8pen** app
-   - Tap **Step 1: Enable 8pen** → turn on "8pen" in the keyboard list
-   - Tap **Step 2: Select 8pen** → choose it as your current keyboard
+   - Open the **ArcPen** app
+   - Tap **Step 1: Enable ArcPen** → turn on "ArcPen" in the keyboard list
+   - Tap **Step 2: Select ArcPen** → choose it as your current keyboard
 
 ## How to type
 
@@ -30,9 +30,9 @@ Depth 2 = cross one boundary before returning
 Depth 3 = cross two boundaries
 Depth 4 = nearly full rotation
 
-**Tap** centre → space  
-**Long-press** centre → backspace  
-**Bottom strip**: ⌫ | space | ↵
+**Tap** centre → space
+**Long-press** centre → backspace
+**Corner buttons**: SHF | DEL (top) and 123 | ENT (bottom)
 
 ## Character map
 
@@ -47,7 +47,7 @@ North d1:  e  │  t
 East  d1:  a  │  o
       d2:  l  │  c
       d3:  p  │  b
-      d4:  ,  │  .
+      d4:  j  │  x
 
 South d1:  i  │  n
       d2:  u  │  m
@@ -56,6 +56,6 @@ South d1:  i  │  n
 
 West  d1:  s  │  h
       d2:  f  │  w
-      d3:  j  │  x
-      d4:  -  │  /
+      d3:  ,  │  .
+      d4:  -  │  '
 ```

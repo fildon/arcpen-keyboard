@@ -1,9 +1,9 @@
-package com.eightpen.keyboard
+package com.arcpen.keyboard
 
 import kotlin.math.*
 
 /**
- * Tracks a single 8pen gesture.
+ * Tracks a single ArcPen gesture.
  *
  * Gesture model:
  *   1. Touch centre → isActive

@@ -5,7 +5,7 @@
         android:allowBackup="true"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.EightPen">
+        android:theme="@style/Theme.ArcPen">
 
         <activity
             android:name=".MainActivity"
@@ -17,7 +17,7 @@
         </activity>
 
         <service
-            android:name=".EightPenIMEService"
+            android:name=".ArcPenIMEService"
             android:exported="true"
             android:label="@string/ime_name"
             android:permission="android.permission.BIND_INPUT_METHOD">

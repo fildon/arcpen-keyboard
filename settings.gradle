@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "8pen-keyboard"
+rootProject.name = "arcpen-keyboard"
 include ':app'

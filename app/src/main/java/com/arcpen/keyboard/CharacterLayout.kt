@@ -1,4 +1,4 @@
-package com.eightpen.keyboard
+package com.arcpen.keyboard
 
 /**
  * Maps (sector, clockwise, depth) triples to characters.
@@ -39,11 +39,11 @@ object CharacterLayout {
         GestureKey(1, false, 1) to 'a',
         GestureKey(1, false, 2) to 'l',
         GestureKey(1, false, 3) to 'p',
-        GestureKey(1, false, 4) to 'j',    // was ','  (j 0.15% < ', ' 1.2%)
+        GestureKey(1, false, 4) to 'j',
         GestureKey(1, true,  1) to 'o',
         GestureKey(1, true,  2) to 'c',
         GestureKey(1, true,  3) to 'b',
-        GestureKey(1, true,  4) to 'x',    // was '.'  (x 0.15% < '.' 1.3%)
+        GestureKey(1, true,  4) to 'x',
         // ── South sector ──────────────────────────────────────
         GestureKey(2, false, 1) to 'i',
         GestureKey(2, false, 2) to 'u',
@@ -56,11 +56,11 @@ object CharacterLayout {
         // ── West sector (punctuation sector at depths 3–4) ────
         GestureKey(3, false, 1) to 's',
         GestureKey(3, false, 2) to 'f',
-        GestureKey(3, false, 3) to ',',    // was 'j'  (',' 1.2% > j 0.15%)
+        GestureKey(3, false, 3) to ',',
         GestureKey(3, false, 4) to '-',
         GestureKey(3, true,  1) to 'h',
         GestureKey(3, true,  2) to 'w',
-        GestureKey(3, true,  3) to '.',    // was 'x'  ('.' 1.3% > x 0.15%)
+        GestureKey(3, true,  3) to '.',
         GestureKey(3, true,  4) to '\'',
     )
 

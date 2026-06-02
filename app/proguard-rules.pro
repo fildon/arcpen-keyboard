@@ -1,3 +1,3 @@
-# 8pen keyboard proguard rules
+# ArcPen keyboard proguard rules
 # Keep IME service class
--keep class com.eightpen.keyboard.EightPenIMEService { *; }
+-keep class com.arcpen.keyboard.ArcPenIMEService { *; }

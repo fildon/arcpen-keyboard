@@ -1,6 +1,6 @@
-# 8pen Keyboard
+# ArcPen Keyboard
 
-A reimplementation of the classic 8pen gesture keyboard for Android. Instead of a grid of keys, 8pen uses a circular gesture interface — you draw short arcs to select characters, keeping your thumb in one place.
+A gesture keyboard for Android. Instead of a grid of keys, ArcPen uses a circular gesture interface — you draw short arcs to select characters, keeping your thumb in one place.
 
 ---
 
@@ -103,11 +103,11 @@ West     s d1 │ h d1
 |---|---|
 | **Space** | Tap the centre disc (no arc) |
 | **Period + space** | Double-tap the centre disc within 300 ms — also auto-capitalises the next letter |
-| **Backspace** | Long-press the centre disc, or tap ⌫ in the top-right corner |
-| **Enter** | Tap ↵ in the bottom-right corner |
-| **Shift (once)** | Tap ⇧ in the top-left corner — capitalises the next letter only |
-| **Caps lock** | Tap ⇧ twice — all letters uppercase until tapped again |
-| **Space (strip)** | Tap `spc` in the bottom-left corner |
+| **Backspace** | Long-press the centre disc, or tap DEL in the top-right corner |
+| **Enter** | Tap ENT in the bottom-right corner |
+| **Shift (once)** | Tap SHF in the top-left corner — capitalises the next letter only |
+| **Caps lock** | Tap SHF twice — all letters uppercase (shown as CAP) until tapped again |
+| **Numeric mode** | Tap 123 in the bottom-left corner — shows a dial-pad; tap ABC to return |
 
 ---
 
@@ -137,10 +137,10 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ### Activate the keyboard
 
 1. Settings → General management → Keyboard list and default (exact path varies by Android version)
-2. Toggle **8pen** on
-3. Open any text field, long-press the keyboard switcher icon in the navigation bar, and select **8pen**
+2. Toggle **ArcPen** on
+3. Open any text field, long-press the keyboard switcher icon in the navigation bar, and select **ArcPen**
 
-Or open the **8pen** app on your phone — it has buttons that take you directly to the relevant settings screens.
+Or open the **ArcPen** app on your phone — it has buttons that take you directly to the relevant settings screens.
 
 ---
 
@@ -152,7 +152,7 @@ Or open the **8pen** app on your phone — it has buttons that take you directly
 
 ### Build in Android Studio
 
-1. Open Android Studio → **Open** → select the `8pen-keyboard` directory
+1. Open Android Studio → **Open** → select the `arcpen-keyboard` directory
 2. Wait for Gradle sync to complete
 3. **Build → Build Bundle(s) / APK(s) → Build APK(s)**
 
@@ -184,11 +184,11 @@ $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
 ```
 app/src/main/
 ├── AndroidManifest.xml          # Declares the IME service and launcher activity
-├── java/com/eightpen/keyboard/
+├── java/com/arcpen/keyboard/
 │   ├── CharacterLayout.kt       # Maps (sector, direction, depth) → character
 │   ├── GestureTracker.kt        # Pure gesture state machine (no Android View dependency)
-│   ├── EightPenView.kt          # Custom View: renders the circle and handles touch
-│   ├── EightPenIMEService.kt    # InputMethodService: bridges view events to the editor
+│   ├── ArcPenView.kt            # Custom View: renders the circle and handles touch
+│   ├── ArcPenIMEService.kt      # InputMethodService: bridges view events to the editor
 │   └── MainActivity.kt          # Setup activity with enable/select buttons
 └── res/
     ├── xml/method.xml            # IME metadata (subtype declaration)
@@ -199,7 +199,7 @@ app/src/main/
 
 **`GestureTracker` is a pure state machine.** It has no Android View imports and takes only `(x, y)` floats as input. This makes it straightforward to unit test in isolation.
 
-**Shift state lives in `EightPenView`.** The view owns the shift toggle and applies the transformation before calling `KeyListener.onCharacter`. The service receives already-shifted characters and does not need to track capitalisation itself.
+**Shift state lives in `ArcPenView`.** The view owns the shift toggle and applies the transformation before calling `KeyListener.onCharacter`. The service receives already-shifted characters and does not need to track capitalisation itself.
 
 **Mid-drag commits.** Returning to the centre disc mid-drag commits the current character via `GestureTracker.onMove` returning a non-null `Char`. The gesture state is soft-reset (active but cleared) so the next outward sweep starts a fresh gesture without requiring a new touch-down.
 
