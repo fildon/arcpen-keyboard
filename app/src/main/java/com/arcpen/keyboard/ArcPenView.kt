@@ -67,7 +67,7 @@ class ArcPenView @JvmOverloads constructor(
 
     // Dial-pad button layout (computed in onSizeChanged)
     private val dialRects  = mutableListOf<RectF>()
-    private val dialChars  = charArrayOf('1','2','3','4','5','6','7','8','9','.','0')
+    private val dialChars  = charArrayOf('1','2','3','4','5','6','7','8','9','0','.')
     private var pressedDial = -1   // index into dialChars, or -1
 
     // ── Gesture state ─────────────────────────────────────────────────────────
@@ -221,10 +221,10 @@ class ArcPenView @JvmOverloads constructor(
                 dialRects.add(RectF(x, y, x + btnW, y + btnH))
             }
         }
-        // Row 4: "." single-wide (col 0) + "0" double-wide (cols 1–2), flush with grid
+        // Row 4: "0" double-wide (cols 0–1) + "." single-wide (col 2), flush with grid
         val y4 = top + 3 * (btnH + gap)
-        dialRects.add(RectF(left,              y4, left + btnW,         y4 + btnH))  // '.'
-        dialRects.add(RectF(left + btnW + gap, y4, left + gridW,        y4 + btnH))  // '0'
+        dialRects.add(RectF(left,                    y4, left + 2*btnW + gap, y4 + btnH))  // '0'
+        dialRects.add(RectF(left + 2*(btnW + gap),   y4, left + gridW,        y4 + btnH))  // '.'
 
         paintDialDigit.textSize = btnH * 0.52f
     }
