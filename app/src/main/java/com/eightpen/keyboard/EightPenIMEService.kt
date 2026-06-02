@@ -1,6 +1,7 @@
 package com.eightpen.keyboard
 
 import android.inputmethodservice.InputMethodService
+import android.os.SystemClock
 import android.text.InputType
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -8,6 +9,8 @@ import android.view.inputmethod.EditorInfo
 class EightPenIMEService : InputMethodService() {
 
     private var keyboardView: EightPenView? = null
+    private var lastSpaceTime = 0L
+    private val DOUBLE_TAP_MS = 300L
 
     override fun onCreateInputView(): View {
         return EightPenView(this).also { view ->
@@ -25,7 +28,19 @@ class EightPenIMEService : InputMethodService() {
                     }
                 }
                 override fun onSpace() {
-                    currentInputConnection?.commitText(" ", 1)
+                    val ic = currentInputConnection ?: return
+                    val now = SystemClock.uptimeMillis()
+                    if (now - lastSpaceTime < DOUBLE_TAP_MS &&
+                        ic.getTextBeforeCursor(1, 0) == " ") {
+                        // Double-tap: swap the trailing space for ". " and auto-capitalise
+                        ic.deleteSurroundingText(1, 0)
+                        ic.commitText(". ", 1)
+                        lastSpaceTime = 0L
+                        keyboardView?.shiftState = ShiftState.ONCE
+                    } else {
+                        ic.commitText(" ", 1)
+                        lastSpaceTime = now
+                    }
                 }
                 override fun onEnter() {
                     val ic  = currentInputConnection ?: return
