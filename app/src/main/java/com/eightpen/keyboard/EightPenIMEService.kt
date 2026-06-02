@@ -1,6 +1,7 @@
 package com.eightpen.keyboard
 
 import android.inputmethodservice.InputMethodService
+import android.text.InputType
 import android.view.View
 import android.view.inputmethod.EditorInfo
 
@@ -27,7 +28,22 @@ class EightPenIMEService : InputMethodService() {
                     currentInputConnection?.commitText(" ", 1)
                 }
                 override fun onEnter() {
-                    sendDefaultEditorAction(true)
+                    val ic  = currentInputConnection ?: return
+                    val ei  = currentInputEditorInfo
+                    val opts = ei?.imeOptions ?: 0
+                    val action = opts and EditorInfo.IME_MASK_ACTION
+                    val isMultiLine = (ei?.inputType ?: 0) and InputType.TYPE_TEXT_FLAG_MULTI_LINE != 0
+                    // IME_FLAG_NO_ENTER_ACTION tells us the app wants Enter to mean newline
+                    // even when an action is also configured.
+                    val noEnterAction = opts and EditorInfo.IME_FLAG_NO_ENTER_ACTION != 0
+
+                    if (isMultiLine || noEnterAction ||
+                        action == EditorInfo.IME_ACTION_NONE ||
+                        action == EditorInfo.IME_ACTION_UNSPECIFIED) {
+                        ic.commitText("\n", 1)
+                    } else {
+                        ic.performEditorAction(action)
+                    }
                 }
             }
         }
