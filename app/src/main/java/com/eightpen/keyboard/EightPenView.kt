@@ -264,6 +264,7 @@ class EightPenView @JvmOverloads constructor(
         val depthRadii  = floatArrayOf(0.40f, 0.56f, 0.71f, 0.85f)
         val offset      = 20.0
         val sectorAngles = doubleArrayOf(270.0, 0.0, 90.0, 180.0)
+        val shifted = shiftState != ShiftState.OFF
 
         for (sector in 0..3) {
             val centreAngle = sectorAngles[sector]
@@ -277,12 +278,14 @@ class EightPenView @JvmOverloads constructor(
                 cwChar?.let {
                     val angle = centreAngle + offset
                     val p = charPaintFor(sector, true, depth)
-                    canvas.drawText(it.toString(), charX(angle, r), charY(angle, r, p), p)
+                    val label = if (shifted) it.uppercaseChar().toString() else it.toString()
+                    canvas.drawText(label, charX(angle, r), charY(angle, r, p), p)
                 }
                 ccwChar?.let {
                     val angle = centreAngle - offset
                     val p = charPaintFor(sector, false, depth)
-                    canvas.drawText(it.toString(), charX(angle, r), charY(angle, r, p), p)
+                    val label = if (shifted) it.uppercaseChar().toString() else it.toString()
+                    canvas.drawText(label, charX(angle, r), charY(angle, r, p), p)
                 }
             }
         }
