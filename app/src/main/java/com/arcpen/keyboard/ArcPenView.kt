@@ -49,7 +49,13 @@ class ArcPenView @JvmOverloads constructor(
     var keyListener: KeyListener? = null
     var shiftState = ShiftState.OFF
     var mode = KeyboardMode.ALPHA
-        private set
+        set(value) {
+            if (field == value) return
+            field = value
+            tracker.reset()
+            pressedDial = -1
+            invalidate()
+        }
 
     // ── Geometry ──────────────────────────────────────────────────────────────
     private var cx = 0f
@@ -486,12 +492,7 @@ class ArcPenView @JvmOverloads constructor(
         when (corner) {
             CORNER_TL -> if (mode == KeyboardMode.ALPHA) cycleShift()
             CORNER_TR -> keyListener?.onBackspace()
-            CORNER_BL -> {
-                mode = if (mode == KeyboardMode.ALPHA) KeyboardMode.NUMERIC else KeyboardMode.ALPHA
-                tracker.reset()
-                pressedDial = -1
-                invalidate()
-            }
+            CORNER_BL -> mode = if (mode == KeyboardMode.ALPHA) KeyboardMode.NUMERIC else KeyboardMode.ALPHA
             CORNER_BR -> keyListener?.onEnter()
         }
     }

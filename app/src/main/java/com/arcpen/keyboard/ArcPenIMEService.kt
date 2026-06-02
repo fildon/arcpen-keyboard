@@ -66,9 +66,18 @@ class ArcPenIMEService : InputMethodService() {
 
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
-        val autoCap = info?.let {
-            it.inputType and android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES != 0
-        } ?: false
+
+        val inputType = info?.inputType ?: 0
+        val inputClass = inputType and InputType.TYPE_MASK_CLASS
+
+        // Auto-switch mode based on the field's declared input class.
+        keyboardView?.mode = when (inputClass) {
+            InputType.TYPE_CLASS_NUMBER, InputType.TYPE_CLASS_PHONE -> KeyboardMode.NUMERIC
+            else -> KeyboardMode.ALPHA
+        }
+
+        // Auto-capitalise at sentence start when in alpha mode.
+        val autoCap = inputType and InputType.TYPE_TEXT_FLAG_CAP_SENTENCES != 0
         if (autoCap) keyboardView?.shiftState = ShiftState.ONCE
     }
 }
