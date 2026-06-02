@@ -105,14 +105,24 @@ class GestureTracker {
             currentSector = sector
         } else if (sector != currentSector) {
             val cw = isClockwiseTransition(currentSector, sector)
-            if (clockwise == null) {
-                // First boundary crossed: lock direction and move to depth 1.
-                clockwise = cw
-                depth = 1
-            } else if (clockwise == cw) {
-                depth = (depth + 1).coerceAtMost(4)
+            when {
+                clockwise == null -> {
+                    // First boundary crossed: lock direction and move to depth 1.
+                    clockwise = cw
+                    depth = 1
+                }
+                clockwise == cw -> {
+                    // Continuing in the same direction.
+                    depth = (depth + 1).coerceAtMost(4)
+                }
+                else -> {
+                    // Reversal: backtrack one step. If we unwind all the way to the
+                    // starting sector (depth 0) also unlock the direction so the user
+                    // can freely choose CW or CCW again from there.
+                    depth--
+                    if (depth == 0) clockwise = null
+                }
             }
-            // Direction reversals are silently ignored.
             currentSector = sector
         }
 
