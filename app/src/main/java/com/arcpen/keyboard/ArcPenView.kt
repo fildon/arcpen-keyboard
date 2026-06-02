@@ -221,12 +221,10 @@ class ArcPenView @JvmOverloads constructor(
                 dialRects.add(RectF(x, y, x + btnW, y + btnH))
             }
         }
-        // Row 4: two centred buttons (. and 0)
+        // Row 4: "." single-wide (col 0) + "0" double-wide (cols 1–2), flush with grid
         val y4 = top + 3 * (btnH + gap)
-        val x4Left  = cx - gap / 2f - btnW
-        val x4Right = cx + gap / 2f
-        dialRects.add(RectF(x4Left,  y4, x4Left  + btnW, y4 + btnH))  // '.'
-        dialRects.add(RectF(x4Right, y4, x4Right + btnW, y4 + btnH))  // '0'
+        dialRects.add(RectF(left,              y4, left + btnW,         y4 + btnH))  // '.'
+        dialRects.add(RectF(left + btnW + gap, y4, left + gridW,        y4 + btnH))  // '0'
 
         paintDialDigit.textSize = btnH * 0.52f
     }
