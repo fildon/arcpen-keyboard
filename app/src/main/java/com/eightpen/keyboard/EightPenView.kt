@@ -120,15 +120,18 @@ class EightPenView @JvmOverloads constructor(
         color = Color.parseColor("#E94560"); style = Paint.Style.FILL
         textAlign = Paint.Align.CENTER; isFakeBoldText = true
     }
-    // Corner labels
+    // Corner labels — all bold so they share the same visual weight
     private val paintCornerL = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#888888"); style = Paint.Style.FILL; textAlign = Paint.Align.LEFT
+        color = Color.parseColor("#888888"); style = Paint.Style.FILL
+        textAlign = Paint.Align.LEFT; isFakeBoldText = true
     }
     private val paintCornerR = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#888888"); style = Paint.Style.FILL; textAlign = Paint.Align.RIGHT
+        color = Color.parseColor("#888888"); style = Paint.Style.FILL
+        textAlign = Paint.Align.RIGHT; isFakeBoldText = true
     }
     private val paintShiftOnceL = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.WHITE; style = Paint.Style.FILL; textAlign = Paint.Align.LEFT
+        color = Color.WHITE; style = Paint.Style.FILL
+        textAlign = Paint.Align.LEFT; isFakeBoldText = true
     }
     private val paintShiftLockedL = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.parseColor("#E94560"); style = Paint.Style.FILL
@@ -346,24 +349,24 @@ class EightPenView @JvmOverloads constructor(
         val h   = height.toFloat()
         val w   = width.toFloat()
 
-        // Top-left: shift (dimmed in numeric mode)
+        // Top-left: SHF / CAP (dimmed when numeric mode is active)
         val shiftPaint = when {
-            mode == KeyboardMode.NUMERIC -> paintCornerL
+            mode == KeyboardMode.NUMERIC    -> paintCornerL
             shiftState == ShiftState.ONCE   -> paintShiftOnceL
             shiftState == ShiftState.LOCKED -> paintShiftLockedL
-            else -> paintCornerL
+            else                            -> paintCornerL
         }
-        val shiftIcon = if (shiftState == ShiftState.LOCKED) "⇪" else "⇧"
-        canvas.drawText(shiftIcon, pad, pad + ts, shiftPaint)
+        val shiftLabel = if (shiftState == ShiftState.LOCKED) "CAP" else "SHF"
+        canvas.drawText(shiftLabel, pad, pad + ts, shiftPaint)
 
-        // Top-right: backspace
-        canvas.drawText("⌫", w - pad, pad + ts, paintCornerR)
+        // Top-right: DEL
+        canvas.drawText("DEL", w - pad, pad + ts, paintCornerR)
 
-        // Bottom-left: mode toggle
-        canvas.drawText(if (mode == KeyboardMode.ALPHA) "123" else "abc", pad, h - pad, paintCornerL)
+        // Bottom-left: 123 / ABC
+        canvas.drawText(if (mode == KeyboardMode.ALPHA) "123" else "ABC", pad, h - pad, paintCornerL)
 
-        // Bottom-right: enter
-        canvas.drawText("↵", w - pad, h - pad, paintCornerR)
+        // Bottom-right: ENT
+        canvas.drawText("ENT", w - pad, h - pad, paintCornerR)
     }
 
     // ── Touch handling ────────────────────────────────────────────────────────
