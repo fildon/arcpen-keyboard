@@ -18,8 +18,11 @@ package com.arcpen.keyboard
  *   Depth 3 – y(2%) g(2%) p(1.9%) b(1.5%) .(1.3%) ,(1.2%) v(0.98%) k(0.77%)
  *   Depth 4 – '(0.49%) -(0.31%) j(0.15%) x(0.15%) ?(0.11%) q(0.10%) !(0.07%) z(0.07%)
  *
- * The West sector doubles as the punctuation sector at depths 3–4:
- *   West depth 3: , .   West depth 4: - '
+ * Within each depth ring the eight positions are ordered left-to-right by Dvorak hand
+ * assignment (vowels and left-hand letters → West/CCW; right-hand consonants → East/CW).
+ * This mirrors the Dvorak convention that vowels live on the left hand.
+ *
+ * West sector holds , . at depth 3 and ' ! at depth 4.
  */
 object CharacterLayout {
 
@@ -28,40 +31,40 @@ object CharacterLayout {
     val map: Map<GestureKey, Char> = mapOf(
         // ── North sector ──────────────────────────────────────
         GestureKey(0, false, 1) to 'e',
-        GestureKey(0, false, 2) to 'r',
-        GestureKey(0, false, 3) to 'y',
+        GestureKey(0, false, 2) to 'd',
+        GestureKey(0, false, 3) to 'p',
         GestureKey(0, false, 4) to 'q',
         GestureKey(0, true,  1) to 't',
-        GestureKey(0, true,  2) to 'd',
-        GestureKey(0, true,  3) to 'g',
-        GestureKey(0, true,  4) to 'z',
+        GestureKey(0, true,  2) to 'c',
+        GestureKey(0, true,  3) to 'y',
+        GestureKey(0, true,  4) to 'x',
         // ── East sector ───────────────────────────────────────
-        GestureKey(1, false, 1) to 'a',
-        GestureKey(1, false, 2) to 'l',
-        GestureKey(1, false, 3) to 'p',
-        GestureKey(1, false, 4) to 'j',
-        GestureKey(1, true,  1) to 'o',
-        GestureKey(1, true,  2) to 'c',
-        GestureKey(1, true,  3) to 'b',
-        GestureKey(1, true,  4) to 'x',
+        GestureKey(1, false, 1) to 'n',
+        GestureKey(1, false, 2) to 'r',
+        GestureKey(1, false, 3) to 'g',
+        GestureKey(1, false, 4) to '-',
+        GestureKey(1, true,  1) to 's',
+        GestureKey(1, true,  2) to 'l',
+        GestureKey(1, true,  3) to 'v',
+        GestureKey(1, true,  4) to '?',
         // ── South sector ──────────────────────────────────────
-        GestureKey(2, false, 1) to 'i',
-        GestureKey(2, false, 2) to 'u',
-        GestureKey(2, false, 3) to 'v',
-        GestureKey(2, false, 4) to '!',
-        GestureKey(2, true,  1) to 'n',
+        GestureKey(2, false, 1) to 'h',
+        GestureKey(2, false, 2) to 'w',
+        GestureKey(2, false, 3) to 'b',
+        GestureKey(2, false, 4) to 'z',
+        GestureKey(2, true,  1) to 'i',
         GestureKey(2, true,  2) to 'm',
         GestureKey(2, true,  3) to 'k',
-        GestureKey(2, true,  4) to '?',
-        // ── West sector (punctuation sector at depths 3–4) ────
-        GestureKey(3, false, 1) to 's',
-        GestureKey(3, false, 2) to 'f',
+        GestureKey(2, true,  4) to 'j',
+        // ── West sector (vowels + left-hand letters at all depths) ────
+        GestureKey(3, false, 1) to 'a',
+        GestureKey(3, false, 2) to 'u',
         GestureKey(3, false, 3) to ',',
-        GestureKey(3, false, 4) to '-',
-        GestureKey(3, true,  1) to 'h',
-        GestureKey(3, true,  2) to 'w',
+        GestureKey(3, false, 4) to '\'',
+        GestureKey(3, true,  1) to 'o',
+        GestureKey(3, true,  2) to 'f',
         GestureKey(3, true,  3) to '.',
-        GestureKey(3, true,  4) to '\'',
+        GestureKey(3, true,  4) to '!',
     )
 
     fun getCharacter(sector: Int, clockwise: Boolean, depth: Int): Char? =
