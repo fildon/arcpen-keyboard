@@ -184,7 +184,7 @@ class ArcPenView @JvmOverloads constructor(
         cx = w / 2f
         cy = h / 2f
         outerR = minOf(w.toFloat(), h.toFloat()) / 2f * 0.88f
-        centerR = outerR * 0.22f
+        centerR = outerR * 0.26f
 
         cornerW = w * 0.22f
         cornerH = h * 0.22f
@@ -244,7 +244,7 @@ class ArcPenView @JvmOverloads constructor(
         canvas.drawCircle(cx, cy, outerR, paintCircle)
         drawSectorLines(canvas)
 
-        for (fraction in floatArrayOf(0.40f, 0.56f, 0.71f, 0.85f)) {
+        for (fraction in floatArrayOf(0.44f, 0.60f, 0.75f, 0.89f)) {
             paintSectorLine.alpha = 60
             canvas.drawCircle(cx, cy, outerR * fraction, paintSectorLine)
         }
@@ -297,7 +297,7 @@ class ArcPenView @JvmOverloads constructor(
     }
 
     private fun drawCharacters(canvas: Canvas) {
-        val depthRadii   = floatArrayOf(0.40f, 0.56f, 0.71f, 0.85f)
+        val depthRadii   = floatArrayOf(0.44f, 0.60f, 0.75f, 0.89f)
         val offset       = 20.0
         val sectorAngles = doubleArrayOf(270.0, 0.0, 90.0, 180.0)
         val shifted = shiftState != ShiftState.OFF
